@@ -102,3 +102,5 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+__pycache__/game_functions.cpython-38.pyc
+__pycache__/alien.cpython-38.pyc
