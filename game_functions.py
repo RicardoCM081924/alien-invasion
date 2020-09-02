@@ -26,7 +26,7 @@ def check_keyup_events(event, ai_settings, screen, ship, bullets):
         ship.moving_left = False
 
 
-def check_events(ai_settings, screen, ship, bullets):
+def check_events(ai_settings, screen, stats, play_button, ship, aliens, bullets):
     """响应按键和鼠标事件"""
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -37,9 +37,26 @@ def check_events(ai_settings, screen, ship, bullets):
             check_keyup_events(event, ai_settings, screen, ship, bullets)
         elif event.type == pygame.K_q:
             sys.exit()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            check_play_button(ai_settings, screen, stats, play_button, ship, aliens, bullets, mouse_x, mouse_y)
 
 
-def update_screen(ai_settings, screen, ship, alien, bullets):
+def check_play_button(ai_settings, screen, stats, play_button, ship, aliens, bullets, mouse_x, mouse_y):
+    """在玩家单机play时开始游戏"""
+    button_clicked = play_button.rect.collidepoint(mouse_x, mouse_y)
+    if button_clicked and not stats.game_active:
+        # 隐藏光标
+        pygame.mouse.set_visible(False)
+        stats.reset_stats()
+        stats.game_active = True
+        aliens.empty()
+        bullets.empty()
+        create_fleet(ai_settings, screen, ship, aliens)
+        ship.center_ship()
+
+
+def update_screen(ai_settings, screen, stats, ship, alien, bullets, play_button):
     """更新屏幕上的图像，并切换到新屏幕"""
     # 每次循环重绘屏幕
     screen.fill(ai_settings.bg_color)
@@ -49,6 +66,9 @@ def update_screen(ai_settings, screen, ship, alien, bullets):
 
     ship.blitme()
     alien.draw(screen)
+    # 如果游戏处于非活动状态，就绘制play按钮
+    if not stats.game_active:
+        play_button.draw_button()
     # 让最近的屏幕可见
     pygame.display.flip()
 
@@ -151,15 +171,16 @@ def ship_hit(ai_settings, stats, screen, ship, aliens, bullets):
 
     else:
         stats.game_active = False
+        pygame.mouse.set_visible(True)
 
 
 def check_aliens_bottom(ai_settings, stats, screen, ship, aliens, bullets):
     """检查是否有外星人达到屏幕底端"""
     screen_rect = screen.get_rect()
-    for  alien in aliens.sprites():
+    for alien in aliens.sprites():
         if alien.rect.bottom >= screen_rect.bottom:
             # 等同飞船被撞
-            ship_hit(ai_settings, stats, screen, ship, aliens, bullets) 
+            ship_hit(ai_settings, stats, screen, ship, aliens, bullets)
 
 
 def update_aliens(ai_settings, stats, screen, ship, aliens, bullets):
